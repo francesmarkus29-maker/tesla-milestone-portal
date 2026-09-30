@@ -1,8 +1,7 @@
 const express = require('express');
 const { initializeApp } = require('firebase/app');
-const { getFirestore, doc, updateDoc, getDoc } = require('firebase/firestore');
+const { getFirestore, doc, getDoc, updateDoc, setDoc } = require('firebase/firestore');
 
-// Your Firebase Web configuration (safe to use directly)
 const firebaseConfig = {
   apiKey: "AIzaSyAmPw9Jubbvors-9V9y_uIivOl5Y92hBY",
   authDomain: "teslamilestone-6ce77.firebaseapp.com",
@@ -12,7 +11,6 @@ const firebaseConfig = {
   appId: "1:603266005390:web:219e0276e2ac5db068cdf"
 };
 
-// Initialize Firebase
 const firebaseApp = initializeApp(firebaseConfig);
 const db = getFirestore(firebaseApp);
 
@@ -23,11 +21,35 @@ app.use(express.json());
 app.post('/webhook', async (req, res) => {
   try {
     const update = req.body;
-    console.log("Received update from Telegram:", update);
-    
-    // Example: You can now read/write to Firestore here freely!
-    
-    res.status(200).send('Webhook processed successfully');
+    console.log("Received Telegram update:", JSON.stringify(update));
+
+    // Check if the update contains a message
+    if (update.message && update.message.text) {
+      const chatId = update.message.chat.id;
+      const text = update.message.text;
+
+      // Example logic: If message is a deposit command like "/deposit 100"
+      if (text.startsWith('/deposit')) {
+        const amount = parseFloat(text.split(' ')[1]) || 0;
+        
+        // Reference user document in Firestore using their Telegram Chat ID
+        const userRef = doc(db, "users", chatId.toString());
+        const userSnap = await getDoc(userRef);
+
+        if (userSnap.exists()) {
+          const currentBalance = userSnap.data().balance || 0;
+          const newBalance = currentBalance + amount;
+          await updateDoc(userRef, { balance: newBalance });
+        } else {
+          // Create user doc if they don't exist yet
+          await setDoc(userRef, { balance: amount, chatId: chatId });
+        }
+
+        console.log(`Updated balance for user ${chatId} by +${amount}`);
+      }
+    }
+
+    res.status(200).send('OK');
   } catch (error) {
     console.error("Error processing webhook:", error);
     res.status(500).send('Internal Server Error');
