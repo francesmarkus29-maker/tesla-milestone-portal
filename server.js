@@ -1,4 +1,5 @@
 const express = require('express');
+const cors = require('cors');
 const { initializeApp } = require('firebase/app');
 const { getFirestore, doc, getDoc, updateDoc, setDoc } = require('firebase/firestore');
 
@@ -16,26 +17,19 @@ const db = getFirestore(firebaseApp);
 
 const app = express();
 app.use(express.json());
-
-// Manual CORS middleware so any frontend can talk to it without missing package errors
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(200);
-  }
-  next();
-});
+app.use(cors());
 
 // Telegram Bot Webhook Route
 app.post('/webhook', async (req, res) => {
   try {
     const update = req.body;
+    console.log("Received Telegram update:", JSON.stringify(update));
+
     if (update.message && update.message.text) {
       const chatId = update.message.chat.id;
       const text = update.message.text;
 
+      // Optional text command handling if needed via Telegram
       if (text.startsWith('/deposit')) {
         const amount = parseFloat(text.split(' ')[1]) || 0;
         const userRef = doc(db, "users", chatId.toString());
@@ -59,19 +53,37 @@ app.post('/webhook', async (req, res) => {
 // Frontend Deposit API Route (Called from invest.html)
 app.post('/api/deposit', async (req, res) => {
   try {
-    const { chatId, amount } = req.body;
+    const { chatId, amount, years, txHash, status } = req.body;
     if (!chatId || !amount) {
-      return res.status(400).json({ error: "Missing chatId or amount" });
+      return res.status(400).json({ error: "Missing required fields" });
     }
 
     const userRef = doc(db, "users", chatId.toString());
     const userSnap = await getDoc(userRef);
 
+    // Save transaction under user's pending deposits so balance stays 0 until approval
     if (userSnap.exists()) {
-      const currentBalance = userSnap.data().balance || 0;
-      await updateDoc(userRef, { balance: currentBalance + parseFloat(amount) });
+      await updateDoc(userRef, { 
+        pendingDeposit: { 
+          amount: parseFloat(amount), 
+          years: parseInt(years) || 1, 
+          txHash: txHash || "", 
+          status: status || 'pending', 
+          timestamp: new Date() 
+        } 
+      });
     } else {
-      await setDoc(userRef, { balance: parseFloat(amount), chatId: chatId });
+      await setDoc(userRef, { 
+        balance: 0, 
+        chatId: chatId,
+        pendingDeposit: { 
+          amount: parseFloat(amount), 
+          years: parseInt(years) || 1, 
+          txHash: txHash || "", 
+          status: status || 'pending', 
+          timestamp: new Date() 
+        } 
+      });
     }
 
     res.status(200).json({ success: true });
