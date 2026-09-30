@@ -1,5 +1,4 @@
 const express = require('express');
-const cors = require('cors');
 const { initializeApp } = require('firebase/app');
 const { getFirestore, doc, getDoc, updateDoc, setDoc } = require('firebase/firestore');
 
@@ -17,7 +16,17 @@ const db = getFirestore(firebaseApp);
 
 const app = express();
 app.use(express.json());
-app.use(cors());
+
+// Manual CORS middleware so any frontend can talk to it without missing package errors
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  next();
+});
 
 // Telegram Bot Webhook Route
 app.post('/webhook', async (req, res) => {
