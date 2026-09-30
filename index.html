@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tesla Milestone | Secure Portal Access</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body { background-color: #f4f4f5; color: #18181b; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        .tesla-card { background: #ffffff; border: 1px solid #e4e4e7; box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.04); }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <div class="max-w-md w-full space-y-6">
+        
+        <!-- Header Branding -->
+        <div class="text-center space-y-2">
+            <div class="w-12 h-12 bg-zinc-900 text-white rounded-2xl flex items-center justify-center font-black text-xl mx-auto shadow-md">T</div>
+            <h1 class="font-extrabold text-zinc-900 text-xl tracking-tight">TESLA MILESTONE</h1>
+            <p class="text-xs text-zinc-500">Secure Client Access Portal</p>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="flex bg-zinc-200 p-1 rounded-xl text-xs font-bold">
+            <button onclick="switchTab('invite')" id="tab-invite-btn" class="flex-1 py-2.5 rounded-lg bg-white text-zinc-900 shadow-sm transition">New Client (Invite Code)</button>
+            <button onclick="switchTab('login')" id="tab-login-btn" class="flex-1 py-2.5 rounded-lg text-zinc-500 transition">Existing Client Sign In</button>
+        </div>
+
+        <!-- NEW CLIENT: INVITE CODE SECTION -->
+        <div id="section-invite" class="tesla-card rounded-2xl p-8 space-y-6">
+            <div class="space-y-1">
+                <h2 class="font-bold text-zinc-900 text-base flex items-center">
+                    <i data-lucide="lock" class="w-4 h-4 mr-2 text-zinc-500"></i> Private Invitation Required
+                </h2>
+                <p class="text-xs text-zinc-500">Enter your corporate invitation code to unlock the KYC registration portal.</p>
+            </div>
+
+            <form onsubmit="verifyInviteCode(event)" class="space-y-4">
+                <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-wider text-zinc-600 mb-1">Invitation Code</label>
+                    <input type="text" id="invite-code-input" required placeholder="e.g. TESLA2026" class="w-full px-4 py-3 rounded-xl border border-zinc-200 text-xs font-mono bg-zinc-50 outline-none focus:border-zinc-900">
+                </div>
+                <button type="submit" class="w-full py-3 bg-zinc-900 hover:bg-zinc-800 text-white font-bold rounded-xl text-xs transition">
+                    Verify & Proceed to KYC
+                </button>
+            </form>
+        </div>
+
+        <!-- EXISTING CLIENT: LOGIN SECTION (Firebase Auth) -->
+        <div id="section-login" class="tesla-card rounded-2xl p-8 space-y-6 hidden">
+            <div class="space-y-1">
+                <h2 class="font-bold text-zinc-900 text-base flex items-center">
+                    <i data-lucide="log-in" class="w-4 h-4 mr-2 text-zinc-900"></i> Client Sign In
+                </h2>
+                <p class="text-xs text-zinc-500">Welcome back. Enter your login credentials to open your dashboard.</p>
+            </div>
+
+            <form onsubmit="handleLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-wider text-zinc-600 mb-1">Registered Email</label>
+                    <input type="email" id="login-email" required placeholder="client@example.com" class="w-full px-4 py-3 rounded-xl border border-zinc-200 text-xs bg-zinc-50 outline-none">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-wider text-zinc-600 mb-1">Password</label>
+                    <input type="password" id="login-password" required placeholder="••••••••" class="w-full px-4 py-3 rounded-xl border border-zinc-200 text-xs bg-zinc-50 outline-none">
+                </div>
+                <button type="submit" id="login-btn" class="w-full py-3 bg-zinc-900 hover:bg-zinc-800 text-white font-bold rounded-xl text-xs transition shadow-sm">
+                    Open Dashboard
+                </button>
+            </form>
+        </div>
+
+    </div>
+
+    <!-- Firebase Auth Script -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAmPw9jUbbvorS-9V9y_uIIivOl5Y92hBY",
+            authDomain: "teslamilestone-6ce77.firebaseapp.com",
+            projectId: "teslamilestone-6ce77",
+            storageBucket: "teslamilestone-6ce77.firebasestorage.app",
+            messagingSenderId: "603266005390",
+            appId: "1:603266005390:web:219be0276e2ac5db068cdf",
+            measurementId: "G-7HLBL47YTT"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        const MASTER_INVITE = "TESLA2026";
+
+        window.switchTab = function(tab) {
+            if(tab === 'invite') {
+                document.getElementById('section-invite').classList.remove('hidden');
+                document.getElementById('section-login').classList.add('hidden');
+                document.getElementById('tab-invite-btn').className = "flex-1 py-2.5 rounded-lg bg-white text-zinc-900 shadow-sm transition";
+                document.getElementById('tab-login-btn').className = "flex-1 py-2.5 rounded-lg text-zinc-500 transition";
+            } else {
+                document.getElementById('section-invite').classList.add('hidden');
+                document.getElementById('section-login').classList.remove('hidden');
+                document.getElementById('tab-login-btn').className = "flex-1 py-2.5 rounded-lg bg-white text-zinc-900 shadow-sm transition";
+                document.getElementById('tab-invite-btn').className = "flex-1 py-2.5 rounded-lg text-zinc-500 transition";
+            }
+        }
+
+        window.verifyInviteCode = function(e) {
+            e.preventDefault();
+            const code = document.getElementById('invite-code-input').value.trim();
+            if (code === MASTER_INVITE) {
+                localStorage.setItem('tesla_invite_verified', 'true');
+                window.location.href = 'kyc.html';
+            } else {
+                alert('Invalid invitation code.');
+            }
+        }
+
+        window.handleLogin = async function(e) {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value.trim().toLowerCase();
+            const password = document.getElementById('login-password').value;
+            const btn = document.getElementById('login-btn');
+
+            btn.innerText = "Signing in...";
+            btn.disabled = true;
+
+            try {
+                // Authenticate with Firebase Auth
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+
+                // Fetch user portfolio document from Firestore using user uid
+                const docRef = doc(db, "clients", user.uid);
+                const docSnap = await getDoc(docRef);
+
+                if(docSnap.exists()) {
+                    const data = docSnap.data();
+                    localStorage.setItem('tesla_client_name', data.name);
+                    localStorage.setItem('tesla_client_email', data.email);
+                    localStorage.setItem('tesla_client_uid', user.uid);
+                    localStorage.setItem('tesla_invested', data.investedPrincipal || 0);
+                    localStorage.setItem('tesla_kyc_completed', 'true');
+                    
+                    window.location.href = 'dashboard.html';
+                } else {
+                    alert("Account profile record not found in cloud database.");
+                    btn.innerText = "Open Dashboard";
+                    btn.disabled = false;
+                }
+            } catch(err) {
+                console.error(err);
+                alert("Authentication failed: Incorrect email or password.");
+                btn.innerText = "Open Dashboard";
+                btn.disabled = false;
+            }
+        }
+    </script>
+    <script>lucide.createIcons();</script>
+</body>
+</html>

