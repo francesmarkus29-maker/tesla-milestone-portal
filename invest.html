@@ -1,207 +1,94 @@
-<!DOCTYPE html>
+<<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tesla Milestone | Purchase Shares</title>
+    <title>Invest - Tesla Milestone Portal</title>
+    <!-- Tailwind CSS CDN for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <style>
-        body { background-color: #f4f4f5; color: #18181b; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        .tesla-card { background: #ffffff; border: 1px solid #e4e4e7; box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.04); }
-    </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-4">
+<body class="min-h-screen flex items-center justify-center bg-gray-900 text-white p-4">
 
-    <div class="max-w-md w-full space-y-6">
-        
-        <!-- Header -->
-        <div class="text-center space-y-2">
-            <div class="w-12 h-12 bg-zinc-900 text-white rounded-2xl flex items-center justify-center font-black text-xl mx-auto shadow-md">T</div>
-            <h1 class="font-extrabold text-zinc-900 text-xl tracking-tight">TESLA MILESTONE</h1>
-            <p class="text-xs text-zinc-500">Corporate Share Acquisition Portal</p>
+    <div class="bg-gray-800 p-8 rounded-xl shadow-2xl max-w-md w-full border border-gray-700 text-center">
+        <h1 class="text-2xl font-bold mb-2">Tesla Investment Milestone</h1>
+        <p class="text-gray-400 mb-6">Scan the QR code or copy the address below to make your deposit.</p>
+
+        <!-- QR Code Placeholder / Image Container -->
+        <div class="bg-white p-4 rounded-lg inline-block mb-4">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=bc1qxy2kgdygjrsqtqzq2n0yrf2493p83kkfjhx0wlh" alt="Bitcoin QR Code" class="mx-auto">
         </div>
 
-        <!-- STEP 1: SELECT INVESTMENT AMOUNT & DURATION -->
-        <div id="step-config" class="tesla-card rounded-2xl p-8 space-y-6">
-            <div class="space-y-1">
-                <h2 class="font-bold text-zinc-900 text-base flex items-center">
-                    <i data-lucide="trending-up" class="w-4 h-4 mr-2 text-emerald-600"></i> Configure Investment
-                </h2>
-                <p class="text-xs text-zinc-500">Select your capital principal and lock-in duration.</p>
+        <div class="mb-6">
+            <label class="block text-xs text-gray-400 mb-1 uppercase tracking-wider">Bitcoin Deposit Address</label>
+            <div class="bg-gray-900 p-3 rounded border border-gray-700 text-sm font-mono text-yellow-400 break-all select-all">
+                bc1qxy2kgdygjrsqtqzq2n0yrf2493p83kkfjhx0wlh
             </div>
-
-            <form onsubmit="proceedToPayment(event)" class="space-y-4">
-                <div>
-                    <label class="block text-[10px] font-bold uppercase tracking-wider text-zinc-600 mb-1">Investment Amount ($ USD)</label>
-                    <input type="number" id="inv-amount" required min="100" placeholder="e.g. 1000" class="w-full px-4 py-3 rounded-xl border border-zinc-200 text-xs font-mono bg-zinc-50 outline-none">
-                </div>
-                <div>
-                    <label class="block text-[10px] font-bold uppercase tracking-wider text-zinc-600 mb-1">Duration Plan</label>
-                    <select id="inv-duration" class="w-full px-4 py-3 rounded-xl border border-zinc-200 text-xs bg-zinc-50 outline-none">
-                        <option value="6 Months">6 Months (Standard Yield)</option>
-                        <option value="12 Months">12 Months (High Growth)</option>
-                        <option value="24 Months">24 Months (Maximum Dividend)</option>
-                    </select>
-                </div>
-                <button type="submit" class="w-full py-3 bg-zinc-900 hover:bg-zinc-800 text-white font-bold rounded-xl text-xs transition shadow-sm">
-                    Proceed to Payment Options
-                </button>
-            </form>
         </div>
 
-        <!-- STEP 2: BITCOIN PAYMENT & PROOF SUBMISSION (Hidden initially) -->
-        <div id="step-payment" class="tesla-card rounded-2xl p-8 space-y-6 hidden">
-            <div class="space-y-1">
-                <h2 class="font-bold text-zinc-900 text-base flex items-center">
-                    <i data-lucide="bitcoin" class="w-4 h-4 mr-2 text-amber-500"></i> Bitcoin Payment Gateway
-                </h2>
-                <p class="text-xs text-zinc-500">Scan the QR code or send exact crypto to the address below.</p>
-            </div>
-
-            <div class="space-y-4 bg-zinc-50 p-4 rounded-xl border border-zinc-200 text-center">
-                <!-- Dynamic QR Code generator via API -->
-                <div class="bg-white p-3 rounded-lg inline-block shadow-sm">
-                    <img id="btc-qr" src="" alt="Bitcoin QR Code" class="w-32 h-32 mx-auto">
-                </div>
-                <div>
-                    <span class="block text-[10px] font-bold uppercase tracking-wider text-zinc-500">Bitcoin Deposit Address</span>
-                    <input type="text" readonly id="btc-address-text" value="bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh" class="w-full text-center px-2 py-1.5 mt-1 bg-white border border-zinc-200 rounded-lg text-[11px] font-mono select-all">
-                </div>
-                <div class="text-[11px] text-zinc-600 font-medium">
-                    Amount Due: <span id="display-usd-due" class="font-bold text-zinc-900"></span>
-                </div>
-            </div>
-
-            <form onsubmit="submitPaymentProof(event)" class="space-y-4">
-                <div>
-                    <label class="block text-[10px] font-bold uppercase tracking-wider text-zinc-600 mb-1">Transaction Hash / ID</label>
-                    <input type="text" id="tx-id" required placeholder="e.g. 4a5f8b9c... or TxID number" class="w-full px-4 py-2.5 rounded-xl border border-zinc-200 text-xs font-mono bg-zinc-50 outline-none">
-                </div>
-                <div>
-                    <label class="block text-[10px] font-bold uppercase tracking-wider text-zinc-600 mb-1">Upload Payment Screenshot</label>
-                    <input type="file" id="tx-screenshot" accept="image/*" required class="w-full text-xs text-zinc-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-zinc-100 file:text-zinc-700 hover:file:bg-zinc-200 cursor-pointer">
-                </div>
-                <button type="submit" id="submit-proof-btn" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition shadow-sm">
-                    Submit Payment Proof for Approval
-                </button>
-            </form>
+        <div class="mb-6 text-left">
+            <label class="block text-xs text-gray-400 mb-1 uppercase tracking-wider">Amount Due</label>
+            <div class="text-xl font-semibold text-green-400">$100 USD</div>
         </div>
 
+        <div class="mb-4 text-left">
+            <label class="block text-sm text-gray-300 mb-1">Transaction Hash / ID</label>
+            <input type="text" id="tx-hash" placeholder="Enter your transaction hash" class="w-full p-3 bg-gray-900 border border-gray-700 rounded text-sm focus:outline-none focus:border-yellow-500">
+        </div>
+
+        <div class="mb-6 text-left">
+            <label class="block text-sm text-gray-300 mb-1">Upload Payment Screenshot</label>
+            <input type="file" id="payment-screenshot" class="w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-yellow-500 file:text-gray-900 hover:file:bg-yellow-400 cursor-pointer">
+        </div>
+
+        <!-- Submit Button -->
+        <button id="submit-btn" onclick="submitPaymentProof()" class="w-full bg-yellow-500 hover:bg-yellow-400 text-gray-950 font-bold py-3 px-4 rounded transition duration-200">
+            Submit Payment Proof for Approval
+        </button>
     </div>
 
-    <!-- Firebase & Telegram Logic Script -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
-        import { getFirestore, doc, setDoc, arrayUnion, Timestamp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+    <script>
+        // Initialize Lucide icons if any are used
+        lucide.createIcons();
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyAmPw9jUbbvorS-9V9y_uIIivOl5Y92hBY",
-            authDomain: "teslamilestone-6ce77.firebaseapp.com",
-            projectId: "teslamilestone-6ce77",
-            storageBucket: "teslamilestone-6ce77.firebasestorage.app",
-            messagingSenderId: "603266005390",
-            appId: "1:603266005390:web:219be0276e2ac5db068cdf",
-            measurementId: "G-7HLBL47YTT"
-        };
+        async function submitPaymentProof() {
+            const btn = document.getElementById('submit-btn');
+            const txHash = document.getElementById('tx-hash').value.trim();
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
-        const TELEGRAM_BOT_TOKEN = "8630191514:AAHnhtahysDQC4wGpA3HW7FiAjjnWRCv9Fk";
-        const TELEGRAM_CHAT_ID = "8696262458";
-        const BTC_WALLET = "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh";
-
-        let selectedAmount = 0;
-        let selectedDuration = '';
-
-        window.addEventListener('DOMContentLoaded', () => {
-            if(!localStorage.getItem('tesla_client_uid')) {
-                window.location.href = 'index.html';
+            if (!txHash) {
+                alert("Please enter your transaction hash or ID.");
+                return;
             }
-        });
 
-        window.proceedToPayment = function(e) {
-            e.preventDefault();
-            selectedAmount = parseFloat(document.getElementById('inv-amount').value);
-            selectedDuration = document.getElementById('inv-duration').value;
-
-            document.getElementById('display-usd-due').innerText = `$${selectedAmount.toLocaleString()} USD`;
-            
-            // Generate QR Code via open API using Bitcoin URI scheme
-            const btcUri = `bitcoin:${BTC_WALLET}?amount=0.002&label=TeslaMilestone`;
-            document.getElementById('btc-qr').src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(btcUri)}`;
-
-            document.getElementById('step-config').classList.add('hidden');
-            document.getElementById('step-payment').classList.remove('hidden');
-        }
-
-        window.submitPaymentProof = async function(e) {
-            e.preventDefault();
-            const txId = document.getElementById('tx-id').value.trim();
-            const screenshot = document.getElementById('tx-screenshot').files[0];
-            const clientName = localStorage.getItem('tesla_client_name') || 'Client';
-            const clientEmail = localStorage.getItem('tesla_client_email') || 'Unknown';
-            const clientUid = localStorage.getItem('tesla_client_uid');
-
-            const btn = document.getElementById('submit-proof-btn');
-            btn.innerText = "Transmitting to Telegram & Cloud...";
+            btn.innerText = "Transmitting to Cloud...";
             btn.disabled = true;
 
-            const transactionId = 'TX-' + Math.floor(100000 + Math.random() * 900000);
-
             try {
-                // 1. Create a Pending Transaction Record in Firestore
-                const clientRef = doc(db, "clients", clientUid);
-                const txPayload = {
-                    id: transactionId,
-                    amount: selectedAmount,
-                    type: `Share Purchase (${selectedDuration})`,
-                    duration: selectedDuration,
-                    txHash: txId,
-                    status: 'Pending',
-                    date: new Date().toLocaleString()
-                };
+                // Get chat ID from localStorage (or fallback for local testing)
+                const chatId = localStorage.getItem('telegramChatId') || "123456789";
+                const amount = 100; // Set your investment tier amount here
 
-                await setDoc(clientRef, {
-                    transactions: arrayUnion(txPayload)
-                }, { merge: true });
-
-                // 2. Send Telegram Notification with Inline Approve/Reject Buttons
-                const msg = `💰 *NEW SHARE PURCHASE DEPOSIT* 💰\n\n*Client:* ${clientName}\n*Email:* ${clientEmail}\n*Amount:* $${selectedAmount.toLocaleString()} USD\n*Duration:* ${selectedDuration}\n*TxID:* \`${txId}\`\n*Status:* Pending Review`;
-                
-                // Telegram Inline Keyboard for instant click action
-                const inlineKeyboard = {
-                    inline_keyboard: [
-                        [
-                            { text: "✅ APPROVE", callback_data: `approve_${clientUid}_${transactionId}_${selectedAmount}` },
-                            { text: "❌ REJECT", callback_data: `reject_${clientUid}_${transactionId}` }
-                        ]
-                    ]
-                };
-
-                await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+                // Send request securely to your live Render backend
+                const response = await fetch('https://tesla-milestone-portal.onrender.com/api/deposit', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
                     body: JSON.stringify({
-                        chat_id: TELEGRAM_CHAT_ID,
-                        text: msg,
-                        parse_mode: 'Markdown',
-                        reply_markup: inlineKeyboard
+                        chatId: chatId,
+                        amount: amount,
+                        txHash: txHash
                     })
                 });
 
-                // Send Screenshot Proof to Telegram
-                const formData = new FormData();
-                formData.append('chat_id', TELEGRAM_CHAT_ID);
-                formData.append('photo', screenshot, 'Payment_Proof.jpg');
-                formData.append('caption', `Payment Proof for ${clientName} - TxID: ${txId}`);
-                await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`, { method: 'POST', body: formData });
-
-                alert("Payment proof submitted successfully! Your deposit is pending admin verification.");
-                window.location.href = 'dashboard.html';
-
-            } catch(err) {
+                if (response.ok) {
+                    alert("Payment proof submitted successfully! Your balance has been updated.");
+                    // Instantly take them to the dashboard
+                    window.location.href = 'dashboard.html';
+                } else {
+                    throw new Error('Server returned an error response.');
+                }
+            } catch (err) {
                 console.error(err);
                 alert("Network transmission error. Please try again.");
                 btn.innerText = "Submit Payment Proof for Approval";
@@ -209,6 +96,5 @@
             }
         }
     </script>
-    <script>lucide.createIcons();</script>
 </body>
 </html>

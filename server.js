@@ -1,4 +1,5 @@
 const express = require('express');
+const cors = require('cors');
 const { initializeApp } = require('firebase/app');
 const { getFirestore, doc, getDoc, updateDoc, setDoc } = require('firebase/firestore');
 
@@ -16,43 +17,58 @@ const db = getFirestore(firebaseApp);
 
 const app = express();
 app.use(express.json());
+app.use(cors());
 
-// Telegram Webhook Route
+// Telegram Bot Webhook Route
 app.post('/webhook', async (req, res) => {
   try {
     const update = req.body;
-    console.log("Received Telegram update:", JSON.stringify(update));
-
-    // Check if the update contains a message
     if (update.message && update.message.text) {
       const chatId = update.message.chat.id;
       const text = update.message.text;
 
-      // Example logic: If message is a deposit command like "/deposit 100"
       if (text.startsWith('/deposit')) {
         const amount = parseFloat(text.split(' ')[1]) || 0;
-        
-        // Reference user document in Firestore using their Telegram Chat ID
         const userRef = doc(db, "users", chatId.toString());
         const userSnap = await getDoc(userRef);
 
         if (userSnap.exists()) {
           const currentBalance = userSnap.data().balance || 0;
-          const newBalance = currentBalance + amount;
-          await updateDoc(userRef, { balance: newBalance });
+          await updateDoc(userRef, { balance: currentBalance + amount });
         } else {
-          // Create user doc if they don't exist yet
           await setDoc(userRef, { balance: amount, chatId: chatId });
         }
-
-        console.log(`Updated balance for user ${chatId} by +${amount}`);
       }
     }
-
     res.status(200).send('OK');
   } catch (error) {
     console.error("Error processing webhook:", error);
     res.status(500).send('Internal Server Error');
+  }
+});
+
+// Frontend Deposit API Route (Called from invest.html)
+app.post('/api/deposit', async (req, res) => {
+  try {
+    const { chatId, amount } = req.body;
+    if (!chatId || !amount) {
+      return res.status(400).json({ error: "Missing chatId or amount" });
+    }
+
+    const userRef = doc(db, "users", chatId.toString());
+    const userSnap = await getDoc(userRef);
+
+    if (userSnap.exists()) {
+      const currentBalance = userSnap.data().balance || 0;
+      await updateDoc(userRef, { balance: currentBalance + parseFloat(amount) });
+    } else {
+      await setDoc(userRef, { balance: parseFloat(amount), chatId: chatId });
+    }
+
+    res.status(200).json({ success: true });
+  } catch (error) {
+    console.error("Error processing deposit API:", error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
